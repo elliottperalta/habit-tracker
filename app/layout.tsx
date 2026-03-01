@@ -31,7 +31,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body style={{ background: 'var(--bg)', color: 'var(--text)' }}>
         <ServiceWorkerRegister />
         <AuthProvider>
-          <main className="max-w-lg mx-auto min-h-screen" style={{ paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'calc(80px + env(safe-area-inset-bottom))' }}>
+          <main className="max-w-lg mx-auto min-h-screen" style={{ paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'calc(66px + env(safe-area-inset-bottom))' }}>
             {children}
           </main>
           <BottomNav />

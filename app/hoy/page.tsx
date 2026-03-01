@@ -104,7 +104,7 @@ export default function HoyPage() {
   }
 
   return (
-    <div className="flex flex-col gap-2 px-4 pt-6 pb-4">
+    <div className="flex flex-col gap-2 px-4 pt-2 pb-4">
       {/* Header */}
       <div className="mb-2">
         <h1 className="text-xl font-bold capitalize" style={{ color: 'var(--text)' }}>
