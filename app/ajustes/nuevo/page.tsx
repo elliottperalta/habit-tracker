@@ -63,7 +63,11 @@ export default function NuevoHabitoPage() {
 
     // Obtener userId directamente de Supabase Auth como fuente fiable
     const { data: { user } } = await supabase.auth.getUser()
-    if (!user) { setSaving(false); return }
+    if (!user) {
+      setSaveError('Sin sesión activa. Cierra sesión y vuelve a entrar.')
+      setSaving(false)
+      return
+    }
 
     // Para counter la recurrencia queda fijada como times_per_week = weekly_goal
     const finalRecurrence =
@@ -233,12 +237,14 @@ export default function NuevoHabitoPage() {
                 const v = parseInt(e.target.value)
                 if (!isNaN(v) && v >= 1) setWeeklyGoal(type === 'minutes' ? Math.max(15, v) : Math.min(7, v))
               }}
-              className="flex-1 text-4xl font-bold text-center tabular-nums rounded-xl py-2 outline-none"
+              className="text-4xl font-bold text-center tabular-nums rounded-xl py-2 outline-none"
               style={{
+                width: 0,
+                flexGrow: 1,
+                minWidth: 0,
                 background: 'transparent',
                 border: '1px solid var(--border)',
                 color: 'var(--text)',
-                MozAppearance: 'textfield',
               }}
             />
             <button
