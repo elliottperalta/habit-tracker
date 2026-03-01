@@ -27,12 +27,17 @@ export default function SleepBlock({ habit, todayLog, onSave, dragHandle }: Prop
 
   const hoursNum = parseFloat(hours) || 0
   const status = hoursNum > 0 ? getSleepStatus(hoursNum) : null
+  const alreadySaved = !!todayLog
+  // Si el usuario modifica los valores, permitir volver a guardar
+  const valuesChanged = todayLog
+    ? hoursNum !== todayLog.value || quality !== (todayLog.quality ?? 0)
+    : false
+  const isConfirmed = (alreadySaved || saved) && !valuesChanged
 
   function handleSave() {
     if (hoursNum <= 0 || quality === 0) return
     onSave(hoursNum, quality)
     setSaved(true)
-    setTimeout(() => setSaved(false), 2000)
   }
 
   return (
@@ -89,15 +94,15 @@ export default function SleepBlock({ habit, todayLog, onSave, dragHandle }: Prop
           <StreakBadge status={status} />
           <button
             onClick={handleSave}
-            disabled={hoursNum <= 0 || quality === 0}
+            disabled={hoursNum <= 0 || quality === 0 || isConfirmed}
             className="text-xs px-3 py-1.5 rounded-xl transition-all duration-150 active:scale-95"
             style={{
-              background: saved ? 'var(--green)' : 'var(--accent)',
+              background: isConfirmed ? 'var(--green)' : 'var(--accent)',
               color: '#fff',
               opacity: hoursNum <= 0 || quality === 0 ? 0.4 : 1,
             }}
           >
-            {saved ? '✓ Guardado' : 'Guardar'}
+            {isConfirmed ? '✓ Guardado' : alreadySaved ? 'Actualizar' : 'Guardar'}
           </button>
         </div>
       )}
