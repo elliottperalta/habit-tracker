@@ -10,9 +10,10 @@ interface Props {
   habit: Habit
   todayLog: HabitLog | null
   onSave: (hours: number, quality: number) => void
+  dragHandle?: React.ReactNode
 }
 
-export default function SleepBlock({ habit, todayLog, onSave }: Props) {
+export default function SleepBlock({ habit, todayLog, onSave, dragHandle }: Props) {
   const [hours, setHours] = useState(todayLog?.value?.toString() ?? '')
   const [quality, setQuality] = useState(todayLog?.quality ?? 0)
   const [saved, setSaved] = useState(false)
@@ -35,7 +36,7 @@ export default function SleepBlock({ habit, todayLog, onSave }: Props) {
   }
 
   return (
-    <HabitBlock icon={habit.icon ?? '💤'} title={habit.name}>
+    <HabitBlock icon={habit.icon ?? '💤'} title={habit.name} dragHandle={dragHandle}>
       <div className="flex gap-3 items-center">
         {/* Horas */}
         <div className="flex-1">

@@ -10,9 +10,10 @@ interface Props {
   weekLogs: HabitLog[]
   weekStreak: number
   onAdd: () => void
+  dragHandle?: React.ReactNode
 }
 
-export default function CounterHabit({ habit, weekLogs, weekStreak, onAdd }: Props) {
+export default function CounterHabit({ habit, weekLogs, weekStreak, onAdd, dragHandle }: Props) {
   const current = weekLogs.length
   const goal = habit.weekly_goal
   const status = getEntrenoWeekStatus(weekStreak)
@@ -21,7 +22,7 @@ export default function CounterHabit({ habit, weekLogs, weekStreak, onAdd }: Pro
   const bars = Array.from({ length: goal }, (_, i) => i < current)
 
   return (
-    <HabitBlock icon={habit.icon ?? '🏋️'} title={habit.name}>
+    <HabitBlock icon={habit.icon ?? '🏋️'} title={habit.name} dragHandle={dragHandle}>
       <div className="flex items-center justify-between">
         {/* Barras semana */}
         <div className="flex flex-col gap-2">

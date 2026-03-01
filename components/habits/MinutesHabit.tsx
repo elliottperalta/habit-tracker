@@ -12,9 +12,10 @@ interface Props {
   habit: Habit
   weekLogs: HabitLog[]
   onAdd: (minutes: number) => void
+  dragHandle?: React.ReactNode
 }
 
-export default function MinutesHabit({ habit, weekLogs, onAdd }: Props) {
+export default function MinutesHabit({ habit, weekLogs, onAdd, dragHandle }: Props) {
   const current = weekLogs.reduce((sum, l) => sum + l.value, 0)
   const goal = habit.weekly_goal
   const progress = pct(current, goal)
@@ -24,7 +25,7 @@ export default function MinutesHabit({ habit, weekLogs, onAdd }: Props) {
     progress >= 1 ? 'var(--green)' : progress >= 0.25 ? 'var(--accent)' : 'var(--text-muted)'
 
   return (
-    <HabitBlock icon={habit.icon ?? '📖'} title={habit.name}>
+    <HabitBlock icon={habit.icon ?? '📖'} title={habit.name} dragHandle={dragHandle}>
       <div className="flex items-center justify-between">
         <span
           className="text-2xl font-bold tabular-nums"

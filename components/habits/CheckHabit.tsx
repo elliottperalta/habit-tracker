@@ -10,9 +10,10 @@ interface Props {
   todayLog: HabitLog | null
   streak: number
   onToggle: (done: boolean) => void
+  dragHandle?: React.ReactNode
 }
 
-export default function CheckHabit({ habit, todayLog, streak, onToggle }: Props) {
+export default function CheckHabit({ habit, todayLog, streak, onToggle, dragHandle }: Props) {
   const done = !!todayLog
 
   // Usar estados de creatina si es creatina, sino estados genéricos
@@ -22,7 +23,7 @@ export default function CheckHabit({ habit, todayLog, streak, onToggle }: Props)
       : getGenericStreakStatus(streak, habit.name)
 
   return (
-    <HabitBlock icon={habit.icon ?? '✓'} title={habit.name}>
+    <HabitBlock icon={habit.icon ?? '✓'} title={habit.name} dragHandle={dragHandle}>
       <div className="flex items-center justify-between">
         <div className="flex flex-col gap-1">
           <StreakBadge status={status} />
