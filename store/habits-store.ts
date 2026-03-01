@@ -153,11 +153,12 @@ export const useHabitsStore = create<HabitsState>()(
       },
 
       createHabit: async (habit) => {
-        const { data } = await supabase
+        const { data, error } = await supabase
           .from('habits')
           .insert(habit)
           .select()
           .single()
+        if (error) throw new Error(error.message)
         if (data) set((s) => ({ habits: [...s.habits, data as Habit] }))
       },
 

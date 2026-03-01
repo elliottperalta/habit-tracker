@@ -30,6 +30,7 @@ export default function NuevoHabitoPage() {
   const [notificationTime, setNotificationTime] = useState('20:00')
   const [notifyIfNotDone, setNotifyIfNotDone] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [saveError, setSaveError] = useState('')
   const [showEmojiPicker, setShowEmojiPicker] = useState(false)
 
   // Counter no tiene paso de recurrencia (ya está implícito en la meta semanal)
@@ -58,6 +59,7 @@ export default function NuevoHabitoPage() {
   async function handleCreate() {
     if (!name.trim()) return
     setSaving(true)
+    setSaveError('')
 
     // Obtener userId directamente de Supabase Auth como fuente fiable
     const { data: { user } } = await supabase.auth.getUser()
@@ -73,22 +75,26 @@ export default function NuevoHabitoPage() {
             timesPerWeek: recurrence === 'times_per_week' ? timesPerWeek : undefined,
           }
 
-    await createHabit({
-      user_id: user.id,
-      name: name.trim(),
-      icon,
-      type,
-      weekly_goal: weeklyGoal,
-      recurrence: finalRecurrence,
-      notification_enabled: notificationEnabled,
-      notification_time: notificationEnabled ? notificationTime : null,
-      notify_if_not_done: notifyIfNotDone,
-      position: habits.length,
-      archived: false,
-    })
-
-    setSaving(false)
-    router.push('/ajustes')
+    try {
+      await createHabit({
+        user_id: user.id,
+        name: name.trim(),
+        icon,
+        type,
+        weekly_goal: weeklyGoal,
+        recurrence: finalRecurrence,
+        notification_enabled: notificationEnabled,
+        notification_time: notificationEnabled ? notificationTime : null,
+        notify_if_not_done: notifyIfNotDone,
+        position: habits.length,
+        archived: false,
+      })
+      router.push('/ajustes')
+    } catch (e: unknown) {
+      setSaveError(e instanceof Error ? e.message : 'Error al guardar')
+    } finally {
+      setSaving(false)
+    }
   }
 
   return (
@@ -184,7 +190,11 @@ export default function NuevoHabitoPage() {
             ).map((opt) => (
               <button
                 key={opt.value}
-                onClick={() => setType(opt.value)}
+                onClick={() => {
+                  setType(opt.value)
+                  // Reset meta a valor sensato según tipo
+                  setWeeklyGoal(opt.value === 'minutes' ? 60 : opt.value === 'counter' ? 3 : 7)
+                }}
                 className="text-left rounded-xl p-3 transition-all"
                 style={{
                   background: type === opt.value ? '#1d4ed822' : 'var(--surface)',
@@ -207,20 +217,33 @@ export default function NuevoHabitoPage() {
           <p className="text-sm font-semibold">
             {type === 'minutes' ? '¿Cuántos minutos por semana?' : '¿Cuántas veces por semana?'}
           </p>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
             <button
               onClick={() => setWeeklyGoal(Math.max(1, weeklyGoal - (type === 'minutes' ? 15 : 1)))}
-              className="w-12 h-12 rounded-full text-xl font-bold transition-all active:scale-90"
+              className="w-12 h-12 rounded-full text-xl font-bold transition-all active:scale-90 flex-shrink-0"
               style={{ background: 'var(--surface2)', border: '1px solid var(--border)' }}
             >
               −
             </button>
-            <span className="text-4xl font-bold flex-1 text-center tabular-nums">
-              {weeklyGoal}
-            </span>
+            <input
+              type="number"
+              inputMode="numeric"
+              value={weeklyGoal}
+              onChange={(e) => {
+                const v = parseInt(e.target.value)
+                if (!isNaN(v) && v >= 1) setWeeklyGoal(type === 'minutes' ? Math.max(15, v) : Math.min(7, v))
+              }}
+              className="flex-1 text-4xl font-bold text-center tabular-nums rounded-xl py-2 outline-none"
+              style={{
+                background: 'transparent',
+                border: '1px solid var(--border)',
+                color: 'var(--text)',
+                MozAppearance: 'textfield',
+              }}
+            />
             <button
               onClick={() => setWeeklyGoal(weeklyGoal + (type === 'minutes' ? 15 : 1))}
-              className="w-12 h-12 rounded-full text-xl font-bold transition-all active:scale-90"
+              className="w-12 h-12 rounded-full text-xl font-bold transition-all active:scale-90 flex-shrink-0"
               style={{ background: 'var(--surface2)', border: '1px solid var(--border)' }}
             >
               +
@@ -401,6 +424,11 @@ export default function NuevoHabitoPage() {
           >
             {saving ? 'Guardando...' : 'Crear hábito ✓'}
           </button>
+        )}
+        {saveError && (
+          <p className="text-xs text-center mt-2" style={{ color: 'var(--red, #ef4444)' }}>
+            {saveError}
+          </p>
         )}
       </div>
     </>
