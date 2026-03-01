@@ -33,15 +33,20 @@ export default function NuevoHabitoPage() {
   const [saveError, setSaveError] = useState('')
   const [showEmojiPicker, setShowEmojiPicker] = useState(false)
 
-  // Counter no tiene paso de recurrencia (ya está implícito en la meta semanal)
-  const totalSteps = type === 'counter' ? 3 : 4
+  // sleep→2 pasos, counter/minutes→3 pasos (sin recurrencia), check→4 pasos
+  const totalSteps = type === 'sleep' ? 2 : (type === 'counter' || type === 'minutes') ? 3 : 4
 
-  // Paso visual (counter: 4→3 cuando llegamos al último paso)
-  const displayStep = type === 'counter' && step === 4 ? 3 : step
+  // Paso visual
+  const displayStep =
+    type === 'sleep' && step === 4 ? 2
+    : (type === 'counter' || type === 'minutes') && step === 4 ? 3
+    : step
 
   function goNext() {
-    if (type === 'counter' && step === 2) {
-      setStep(4) // saltar recurrencia
+    if (type === 'sleep' && step === 1) {
+      setStep(4) // sleep: saltar meta + recurrencia
+    } else if ((type === 'counter' || type === 'minutes') && step === 2) {
+      setStep(4) // counter/minutes: saltar recurrencia
     } else {
       setStep(step + 1)
     }
@@ -49,7 +54,9 @@ export default function NuevoHabitoPage() {
 
   function goBack() {
     if (step <= 1) { router.back(); return }
-    if (type === 'counter' && step === 4) {
+    if (type === 'sleep' && step === 4) {
+      setStep(1) // sleep: volver al inicio
+    } else if ((type === 'counter' || type === 'minutes') && step === 4) {
       setStep(2) // volver saltando recurrencia
     } else {
       setStep(step - 1)
@@ -69,10 +76,12 @@ export default function NuevoHabitoPage() {
       return
     }
 
-    // Para counter la recurrencia queda fijada como times_per_week = weekly_goal
+    // Para sleep y minutes la recurrencia es diaria (sin paso de selección)
     const finalRecurrence =
       type === 'counter'
         ? { type: 'times_per_week' as const, timesPerWeek: weeklyGoal }
+        : type === 'sleep' || type === 'minutes'
+        ? { type: 'daily' as const }
         : {
             type: recurrence,
             days: recurrence === 'specific' ? specificDays : undefined,
@@ -190,6 +199,7 @@ export default function NuevoHabitoPage() {
                 { value: 'check', label: '✅ Check — Se hace o no se hace', desc: 'Creatina, Meditación' },
                 { value: 'minutes', label: '⏱️ Minutos — Acumulas tiempo', desc: 'Lectura, Inglés' },
                 { value: 'counter', label: '🔢 Contador — Veces por semana', desc: 'Entreno, Yoga' },
+                { value: 'sleep', label: '😴 Sueño — Horas diarias', desc: 'Meta: 8h/día + calidad' },
               ] as { value: HabitType; label: string; desc: string }[]
             ).map((opt) => (
               <button
@@ -197,7 +207,12 @@ export default function NuevoHabitoPage() {
                 onClick={() => {
                   setType(opt.value)
                   // Reset meta a valor sensato según tipo
-                  setWeeklyGoal(opt.value === 'minutes' ? 60 : opt.value === 'counter' ? 3 : 7)
+                  setWeeklyGoal(
+                    opt.value === 'minutes' ? 60
+                    : opt.value === 'counter' ? 3
+                    : opt.value === 'sleep' ? 56  // 8h × 7 días
+                    : 7
+                  )
                 }}
                 className="text-left rounded-xl p-3 transition-all"
                 style={{
