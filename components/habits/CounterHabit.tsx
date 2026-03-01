@@ -64,7 +64,7 @@ export default function CounterHabit({ habit, weekLogs, weekStreak, onAdd, dragH
             cursor: current >= goal ? 'default' : 'pointer',
           }}
         >
-          {current >= goal ? '✓ Listo' : '+1 Entreno'}
+          {current >= goal ? '✓ Listo' : '+1'}
         </button>
       </div>
     </HabitBlock>
