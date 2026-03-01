@@ -16,7 +16,15 @@ import { supabaseAdmin } from '@/lib/supabase/server'
 
 // ─── Helpers de fecha ──────────────────────────────────────────────────────────
 
-/** Fecha en formato YYYY-MM-DD a partir de un Date UTC */
+/** Panamá es UTC-5 y no tiene horario de verano */
+const PANAMA_OFFSET_MS = -5 * 60 * 60 * 1000
+
+/** Convierte un Date UTC al instante equivalente en hora panameña */
+function toPanama(utc: Date): Date {
+  return new Date(utc.getTime() + PANAMA_OFFSET_MS)
+}
+
+/** Fecha en formato YYYY-MM-DD en hora panameña */
 function toISO(d: Date): string {
   return d.toISOString().split('T')[0]
 }
@@ -131,9 +139,10 @@ export async function POST(req: NextRequest) {
   )
 
   try {
-    const now = new Date()
-    const today = toISO(now)
-    const dayOfWeek = now.getUTCDay() // 0=Dom, 1=Lun, 2=Mar, 3=Mié, 4=Jue, 5=Vie, 6=Sáb
+    const nowUTC = new Date()
+    const now = toPanama(nowUTC)          // hora local Panamá
+    const today = toISO(now)             // fecha en Panamá
+    const dayOfWeek = now.getUTCDay()    // 0=Dom … 6=Sáb, en hora panameña
     const isWednesday = dayOfWeek === 3
     const isFriday = dayOfWeek === 5
     const { start: weekStart, end: weekEnd } = getWeekBounds(now)

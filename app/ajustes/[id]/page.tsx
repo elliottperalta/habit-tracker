@@ -22,8 +22,6 @@ export default function EditarHabitoPage({ params }: { params: Promise<{ id: str
   const [icon, setIcon] = useState('📌')
   const [weeklyGoal, setWeeklyGoal] = useState(7)
   const [notificationEnabled, setNotificationEnabled] = useState(false)
-  const [notificationTime, setNotificationTime] = useState('20:00')
-  const [notifyIfNotDone, setNotifyIfNotDone] = useState(true)
 
   useEffect(() => {
     if (habits.length === 0) fetchHabits()
@@ -36,8 +34,6 @@ export default function EditarHabitoPage({ params }: { params: Promise<{ id: str
       setIcon(habit.icon ?? '📌')
       setWeeklyGoal(habit.weekly_goal)
       setNotificationEnabled(habit.notification_enabled)
-      setNotificationTime(habit.notification_time ?? '20:00')
-      setNotifyIfNotDone(habit.notify_if_not_done)
       setInitialized(true)
     }
   }, [habits, id, initialized])
@@ -70,8 +66,8 @@ export default function EditarHabitoPage({ params }: { params: Promise<{ id: str
       icon,
       weekly_goal: weeklyGoal,
       notification_enabled: notificationEnabled,
-      notification_time: notificationEnabled ? notificationTime : null,
-      notify_if_not_done: notifyIfNotDone,
+      notification_time: null,
+      notify_if_not_done: true,
     })
     setSaving(false)
     router.push('/ajustes')
@@ -144,9 +140,9 @@ export default function EditarHabitoPage({ params }: { params: Promise<{ id: str
 
         {/* Notificaciones */}
         <div className="flex flex-col gap-3">
-          <label className="text-xs" style={{ color: 'var(--text-muted)' }}>Notificación</label>
+          <label className="text-xs" style={{ color: 'var(--text-muted)' }}>Notificación inteligente</label>
           <div className="flex items-center justify-between p-4 rounded-xl"
-            style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+            style={{ background: 'var(--surface)', border: `1px solid ${notificationEnabled ? 'var(--accent)' : 'var(--border)'}` }}>
             <span className="text-sm">Activar notificación</span>
             <button onClick={() => setNotificationEnabled(!notificationEnabled)}
               className="relative transition-all duration-300"
@@ -155,23 +151,15 @@ export default function EditarHabitoPage({ params }: { params: Promise<{ id: str
                 style={{ width: 20, height: 20, background: '#fff', left: notificationEnabled ? 24 : 3, transition: 'left 0.3s' }} />
             </button>
           </div>
-          {notificationEnabled && (
-            <>
-              <input type="time" value={notificationTime} onChange={(e) => setNotificationTime(e.target.value)}
-                className="rounded-xl px-4 py-3 outline-none"
-                style={{ background: 'var(--surface2)', border: '1px solid var(--border)', color: 'var(--text)' }} />
-              <div className="flex items-center justify-between p-4 rounded-xl"
-                style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
-                <span className="text-sm">Solo si no está registrado</span>
-                <button onClick={() => setNotifyIfNotDone(!notifyIfNotDone)}
-                  className="relative transition-all duration-300"
-                  style={{ width: 48, height: 28, borderRadius: 14, background: notifyIfNotDone ? 'var(--accent)' : 'var(--surface2)', border: `1px solid ${notifyIfNotDone ? 'var(--accent)' : 'var(--border)'}` }}>
-                  <span className="absolute top-1/2 -translate-y-1/2 rounded-full"
-                    style={{ width: 20, height: 20, background: '#fff', left: notifyIfNotDone ? 24 : 3, transition: 'left 0.3s' }} />
-                </button>
-              </div>
-            </>
-          )}
+          <div className="p-4 rounded-xl" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+            <p className="text-xs font-semibold mb-1" style={{ color: 'var(--text-muted)' }}>¿Cuándo te avisamos?</p>
+            <p className="text-sm" style={{ color: 'var(--text)' }}>
+              {habit.type === 'check' && '📅 Cada día a las 20:00 si no lo has marcado'}
+              {habit.type === 'minutes' && '📅 Miércoles si llevas 0 min · Viernes si vas por debajo del 50% de la meta'}
+              {habit.type === 'counter' && '📅 Viernes si te faltan sesiones para cerrar la semana'}
+              {habit.type === 'sleep' && '📅 Si duermes menos de 6h tres días seguidos'}
+            </p>
+          </div>
         </div>
       </div>
 

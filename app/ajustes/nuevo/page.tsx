@@ -27,8 +27,6 @@ export default function NuevoHabitoPage() {
   const [specificDays, setSpecificDays] = useState<number[]>([])
   const [timesPerWeek, setTimesPerWeek] = useState(3)
   const [notificationEnabled, setNotificationEnabled] = useState(false)
-  const [notificationTime, setNotificationTime] = useState('20:00')
-  const [notifyIfNotDone, setNotifyIfNotDone] = useState(true)
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState('')
   const [showEmojiPicker, setShowEmojiPicker] = useState(false)
@@ -97,8 +95,8 @@ export default function NuevoHabitoPage() {
         weekly_goal: weeklyGoal,
         recurrence: finalRecurrence,
         notification_enabled: notificationEnabled,
-        notification_time: notificationEnabled ? notificationTime : null,
-        notify_if_not_done: notifyIfNotDone,
+        notification_time: null,
+        notify_if_not_done: true,
         position: habits.length,
         archived: false,
       })
@@ -348,10 +346,11 @@ export default function NuevoHabitoPage() {
       {/* PASO 4: Notificaciones */}
       {step === 4 && (
         <div className="flex flex-col gap-4">
-          <p className="text-sm font-semibold">¿Quieres notificaciones?</p>
+          <p className="text-sm font-semibold">¿Quieres notificaciones inteligentes?</p>
 
+          {/* Toggle */}
           <div className="flex items-center justify-between p-4 rounded-xl"
-            style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+            style={{ background: 'var(--surface)', border: `1px solid ${notificationEnabled ? 'var(--accent)' : 'var(--border)'}` }}>
             <span className="text-sm">Activar notificación</span>
             <button
               onClick={() => setNotificationEnabled(!notificationEnabled)}
@@ -364,55 +363,22 @@ export default function NuevoHabitoPage() {
             >
               <span
                 className="absolute top-1/2 -translate-y-1/2 rounded-full"
-                style={{
-                  width: 20, height: 20, background: '#fff',
-                  left: notificationEnabled ? 24 : 3,
-                  transition: 'left 0.3s',
-                }}
+                style={{ width: 20, height: 20, background: '#fff', left: notificationEnabled ? 24 : 3, transition: 'left 0.3s' }}
               />
             </button>
           </div>
 
-          {notificationEnabled && (
-            <>
-              <div className="flex flex-col gap-1">
-                <label className="text-xs" style={{ color: 'var(--text-muted)' }}>Hora</label>
-                <input
-                  type="time"
-                  value={notificationTime}
-                  onChange={(e) => setNotificationTime(e.target.value)}
-                  className="rounded-xl px-4 py-3 text-base outline-none"
-                  style={{
-                    background: 'var(--surface2)',
-                    border: '1px solid var(--border)',
-                    color: 'var(--text)',
-                  }}
-                />
-              </div>
-              <div className="flex items-center justify-between p-4 rounded-xl"
-                style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
-                <span className="text-sm">Solo si no está marcado</span>
-                <button
-                  onClick={() => setNotifyIfNotDone(!notifyIfNotDone)}
-                  className="relative transition-all duration-300"
-                  style={{
-                    width: 48, height: 28, borderRadius: 14,
-                    background: notifyIfNotDone ? 'var(--accent)' : 'var(--surface2)',
-                    border: `1px solid ${notifyIfNotDone ? 'var(--accent)' : 'var(--border)'}`,
-                  }}
-                >
-                  <span
-                    className="absolute top-1/2 -translate-y-1/2 rounded-full"
-                    style={{
-                      width: 20, height: 20, background: '#fff',
-                      left: notifyIfNotDone ? 24 : 3,
-                      transition: 'left 0.3s',
-                    }}
-                  />
-                </button>
-              </div>
-            </>
-          )}
+          {/* Descripción de la regla */}
+          <div className="p-4 rounded-xl flex flex-col gap-1"
+            style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+            <p className="text-xs font-semibold" style={{ color: 'var(--text-muted)' }}>¿Cuándo te avisamos?</p>
+            <p className="text-sm" style={{ color: 'var(--text)' }}>
+              {type === 'check' && '📅 Cada día a las 20:00 si no lo has marcado'}
+              {type === 'minutes' && '📅 Miércoles si llevas 0 min · Viernes si vas por debajo del 50% de la meta'}
+              {type === 'counter' && '📅 Viernes si te faltan sesiones para cerrar la semana'}
+              {type === 'sleep' && '📅 Si duermes menos de 6h tres días seguidos'}
+            </p>
+          </div>
         </div>
       )}
 
