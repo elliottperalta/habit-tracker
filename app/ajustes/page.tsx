@@ -27,7 +27,7 @@ export default function AjustesPage() {
   const canAdd = habits.length < MAX_ACTIVE_HABITS
 
   return (
-    <div className="flex flex-col gap-4 px-4 pt-10 pb-4">
+    <div className="flex flex-col gap-4 px-4 pt-2 pb-4">
       {/* Header */}
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-bold" style={{ color: 'var(--text)' }}>

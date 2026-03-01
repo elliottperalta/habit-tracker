@@ -71,7 +71,7 @@ export default function ProgresoPage() {
   const weekSummary = computeWeekSummary(habits, getWeekLogs, getLogsForHabit)
 
   return (
-    <div className="flex flex-col gap-4 px-4 pt-10 pb-4">
+    <div className="flex flex-col gap-4 px-4 pt-2 pb-4">
       {/* Header */}
       <h1 className="text-xl font-bold" style={{ color: 'var(--text)' }}>
         Progreso
