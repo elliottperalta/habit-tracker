@@ -25,7 +25,7 @@ export default function BottomNav() {
         paddingBottom: 'env(safe-area-inset-bottom)',
       }}
     >
-      <div className="flex items-center justify-around h-16 max-w-lg mx-auto px-2">
+      <div className="flex items-center justify-around h-11 max-w-lg mx-auto px-4">
         {tabs.map((tab) => {
           const active = pathname.startsWith(tab.href)
           return (
@@ -33,20 +33,14 @@ export default function BottomNav() {
               key={tab.href}
               href={tab.href}
               className={cn(
-                'flex flex-col items-center gap-1 flex-1 py-2 rounded-xl transition-all duration-200',
-                active ? 'opacity-100' : 'opacity-40 hover:opacity-60'
+                'flex flex-col items-center justify-center flex-1 h-full transition-all duration-200 relative',
+                active ? 'opacity-100' : 'opacity-35 hover:opacity-55'
               )}
             >
-              <span className="text-xl leading-none">{tab.icon}</span>
-              <span
-                className="text-xs font-medium"
-                style={{ color: active ? 'var(--text)' : 'var(--text-muted)' }}
-              >
-                {tab.label}
-              </span>
+              <span className="text-base leading-none">{tab.icon}</span>
               {active && (
                 <span
-                  className="w-1 h-1 rounded-full"
+                  className="absolute bottom-0.5 w-1 h-1 rounded-full"
                   style={{ background: 'var(--accent)' }}
                 />
               )}
