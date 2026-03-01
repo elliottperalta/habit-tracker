@@ -4,15 +4,15 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useHabitsStore } from '@/store/habits-store'
 import { HabitType, RecurrenceType } from '@/types'
-
-const ICONS: Record<string, string> = {
-  check: '✅',
-  minutes: '⏱️',
-  counter: '🔢',
-  sleep: '💤',
-}
+import { supabase } from '@/lib/supabase/client'
 
 const DAYS = ['L', 'M', 'X', 'J', 'V', 'S', 'D']
+
+const EMOJI_OPTIONS = [
+  '💊','🏋️','😴','📖','🧘','🚶','🍎','💧','☕','🎯',
+  '✍️','🎸','💻','🧹','💰','🧠','🏃','🥗','🌿','⚡',
+  '📌','❤️','🌅','🎨','🎤','🐾','🧪','📐','🔑','🌟',
+]
 
 export default function NuevoHabitoPage() {
   const router = useRouter()
@@ -30,6 +30,7 @@ export default function NuevoHabitoPage() {
   const [notificationTime, setNotificationTime] = useState('20:00')
   const [notifyIfNotDone, setNotifyIfNotDone] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false)
 
   // Counter no tiene paso de recurrencia (ya está implícito en la meta semanal)
   const totalSteps = type === 'counter' ? 3 : 4
@@ -58,6 +59,10 @@ export default function NuevoHabitoPage() {
     if (!name.trim()) return
     setSaving(true)
 
+    // Obtener userId directamente de Supabase Auth como fuente fiable
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) { setSaving(false); return }
+
     // Para counter la recurrencia queda fijada como times_per_week = weekly_goal
     const finalRecurrence =
       type === 'counter'
@@ -69,7 +74,7 @@ export default function NuevoHabitoPage() {
           }
 
     await createHabit({
-      user_id: userId ?? '',
+      user_id: user.id,
       name: name.trim(),
       icon,
       type,
@@ -87,7 +92,9 @@ export default function NuevoHabitoPage() {
   }
 
   return (
-    <div className="flex flex-col gap-6 px-4 pt-10 pb-4 min-h-screen">
+    <>
+      {/* Contenido scrollable con espacio para el botón fijo */}
+      <div className="flex flex-col gap-6 px-4 pt-6" style={{ paddingBottom: 'calc(130px + env(safe-area-inset-bottom))' }}>
       {/* Header */}
       <div className="flex items-center gap-3">
         <button
@@ -120,20 +127,18 @@ export default function NuevoHabitoPage() {
           <p className="text-sm font-semibold">¿Cómo se llama el hábito?</p>
 
           <div className="flex gap-2">
-            <input
-              type="text"
-              inputMode="text"
-              value={icon}
-              onChange={(e) => setIcon(e.target.value)}
-              maxLength={2}
-              className="w-14 text-center text-xl rounded-xl py-3 outline-none"
+            {/* Botón emoji — abre selector */}
+            <button
+              type="button"
+              onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+              className="w-14 h-12 text-center text-xl rounded-xl flex items-center justify-center transition-all"
               style={{
                 background: 'var(--surface2)',
-                border: '1px solid var(--border)',
-                color: 'var(--text)',
+                border: `1px solid ${showEmojiPicker ? 'var(--accent)' : 'var(--border)'}`,
               }}
-              placeholder="📌"
-            />
+            >
+              {icon}
+            </button>
             <input
               type="text"
               value={name}
@@ -147,6 +152,26 @@ export default function NuevoHabitoPage() {
               }}
             />
           </div>
+
+          {/* Grid de emojis */}
+          {showEmojiPicker && (
+            <div
+              className="grid gap-2 p-3 rounded-xl"
+              style={{ gridTemplateColumns: 'repeat(6, 1fr)', background: 'var(--surface)', border: '1px solid var(--border)' }}
+            >
+              {EMOJI_OPTIONS.map((e) => (
+                <button
+                  key={e}
+                  type="button"
+                  onClick={() => { setIcon(e); setShowEmojiPicker(false) }}
+                  className="text-2xl h-10 flex items-center justify-center rounded-lg transition-all active:scale-90"
+                  style={{ background: icon === e ? '#1d4ed822' : 'transparent', border: `1px solid ${icon === e ? 'var(--accent)' : 'transparent'}` }}
+                >
+                  {e}
+                </button>
+              ))}
+            </div>
+          )}
 
           <p className="text-sm font-semibold">¿Qué tipo de hábito es?</p>
           <div className="flex flex-col gap-2">
@@ -348,7 +373,13 @@ export default function NuevoHabitoPage() {
       )}
 
       {/* Botones de navegación */}
-      <div className="mt-auto pt-4">
+      </div>
+
+      {/* Botón fijo sobre la BottomNav */}
+      <div
+        className="fixed left-0 right-0 px-4 max-w-lg mx-auto"
+        style={{ bottom: 'calc(64px + env(safe-area-inset-bottom) + 12px)' }}
+      >
         {step < 4 ? (
           <button
             onClick={goNext}
@@ -372,6 +403,6 @@ export default function NuevoHabitoPage() {
           </button>
         )}
       </div>
-    </div>
+    </>
   )
 }
