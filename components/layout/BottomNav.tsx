@@ -17,11 +17,12 @@ export default function BottomNav() {
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 safe-bottom z-50"
+      className="fixed bottom-0 left-0 right-0 z-50"
       style={{
         background: 'rgba(10,10,10,0.92)',
         backdropFilter: 'blur(20px)',
         borderTop: '1px solid var(--border)',
+        paddingBottom: 'env(safe-area-inset-bottom)',
       }}
     >
       <div className="flex items-center justify-around h-16 max-w-lg mx-auto px-2">
