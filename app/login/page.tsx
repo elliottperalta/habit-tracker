@@ -36,11 +36,19 @@ function LoginForm() {
       email,
       options: {
         emailRedirectTo: `${window.location.origin}/auth/callback`,
+        shouldCreateUser: false,
       },
     })
 
     if (error) {
-      setErrorMsg('Error al enviar el link. Revisá el email.')
+      console.error('[login] signInWithOtp error:', error.message, error.status)
+      if (error.status === 429 || error.message.toLowerCase().includes('rate')) {
+        setErrorMsg('Demasiados intentos. Esperá un minuto y volvé a intentarlo.')
+      } else if (error.message.toLowerCase().includes('user not found') || error.message.toLowerCase().includes('invalid')) {
+        setErrorMsg('Email no registrado o sin acceso.')
+      } else {
+        setErrorMsg(`Error al enviar el link: ${error.message}`)
+      }
     } else {
       setSent(true)
     }

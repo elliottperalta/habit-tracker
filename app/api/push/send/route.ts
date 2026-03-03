@@ -126,11 +126,12 @@ function buildSleepAwarenessPayload(icon: string, name: string): NotifPayload {
 
 // ─── Handler principal ────────────────────────────────────────────────────────
 
-export async function POST(req: NextRequest) {
+function checkAuth(req: NextRequest): boolean {
   const authHeader = req.headers.get('Authorization')
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
+  return authHeader === `Bearer ${process.env.CRON_SECRET}`
+}
+
+async function runNotifications(): Promise<NextResponse> {
 
   webpush.setVapidDetails(
     'mailto:' + process.env.VAPID_EMAIL!,
@@ -249,4 +250,20 @@ export async function POST(req: NextRequest) {
     console.error('[push/send]', e)
     return NextResponse.json({ error: 'Server error' }, { status: 500 })
   }
+}
+
+// Vercel cron jobs send GET requests — this is the actual cron entry point
+export async function GET(req: NextRequest) {
+  if (!checkAuth(req)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+  return runNotifications()
+}
+
+// Keep POST for manual triggers / testing
+export async function POST(req: NextRequest) {
+  if (!checkAuth(req)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+  return runNotifications()
 }
