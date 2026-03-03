@@ -1,4 +1,15 @@
 /**
+ * Convierte una clave VAPID base64url a Uint8Array.
+ * iOS Safari requiere esto — no acepta el string directamente.
+ */
+function urlBase64ToUint8Array(base64String: string): Uint8Array {
+  const padding = '='.repeat((4 - (base64String.length % 4)) % 4)
+  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/')
+  const rawData = atob(base64)
+  return Uint8Array.from([...rawData].map((char) => char.charCodeAt(0)))
+}
+
+/**
  * Solicita permiso y registra la suscripción push del usuario
  */
 export async function subscribeToPush(userId: string): Promise<boolean> {
@@ -15,8 +26,8 @@ export async function subscribeToPush(userId: string): Promise<boolean> {
 
     const subscription = await registration.pushManager.subscribe({
       userVisibleOnly: true,
-      // Pasamos la clave como string directamente — Web Push API la acepta
-      applicationServerKey: process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
+      // iOS Safari requiere Uint8Array, no acepta el string base64 directamente
+      applicationServerKey: urlBase64ToUint8Array(process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!),
     })
 
     // Enviar suscripción al servidor
@@ -29,6 +40,22 @@ export async function subscribeToPush(userId: string): Promise<boolean> {
     return res.ok
   } catch (err) {
     console.error('Error subscribing to push:', err)
+    return false
+  }
+}
+
+/**
+ * Comprueba si hay una suscripción push activa en este dispositivo.
+ * Útil para detectar el caso en que el permiso está granted pero la
+ * suscripción no existe o fue borrada (frecuente en iOS).
+ */
+export async function hasActivePushSubscription(): Promise<boolean> {
+  try {
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) return false
+    const registration = await navigator.serviceWorker.ready
+    const subscription = await registration.pushManager.getSubscription()
+    return subscription !== null
+  } catch {
     return false
   }
 }

@@ -7,7 +7,7 @@ import { createBrowserClient } from '@supabase/ssr'
 import { useHabitsStore } from '@/store/habits-store'
 import { Habit } from '@/types'
 import { MAX_ACTIVE_HABITS } from '@/lib/constants'
-import { subscribeToPush } from '@/lib/notifications'
+import { subscribeToPush, hasActivePushSubscription } from '@/lib/notifications'
 
 export default function AjustesPage() {
   const router = useRouter()
@@ -254,14 +254,26 @@ function HabitRow({
 // ----- Sección push -----
 function PushSection() {
   const { userId } = useHabitsStore()
-  const [status, setStatus] = useState<'unknown' | 'granted' | 'denied' | 'unsupported'>('unknown')
+  const [status, setStatus] = useState<'unknown' | 'granted' | 'granted-no-sub' | 'denied' | 'unsupported'>('unknown')
   const [subscribing, setSubscribing] = useState(false)
 
   useEffect(() => {
-    if (!('Notification' in window)) {
+    if (!('Notification' in window) || !('serviceWorker' in navigator) || !('PushManager' in window)) {
       setStatus('unsupported')
+      return
+    }
+    const perm = Notification.permission
+    if (perm === 'denied') {
+      setStatus('denied')
+      return
+    }
+    if (perm === 'granted') {
+      // Verificar si hay suscripción real (puede faltar en iOS después de reinstalar)
+      hasActivePushSubscription().then((has) => {
+        setStatus(has ? 'granted' : 'granted-no-sub')
+      })
     } else {
-      setStatus(Notification.permission as 'granted' | 'denied' | 'unknown')
+      setStatus('unknown')
     }
   }, [])
 
@@ -269,7 +281,12 @@ function PushSection() {
     if (!userId) return
     setSubscribing(true)
     const ok = await subscribeToPush(userId)
-    setStatus(ok ? 'granted' : 'denied')
+    if (ok) {
+      setStatus('granted')
+    } else {
+      // Si el permiso ya estaba concedido pero falló la suscripción
+      setStatus(Notification.permission === 'denied' ? 'denied' : 'granted-no-sub')
+    }
     setSubscribing(false)
   }
 
@@ -289,6 +306,20 @@ function PushSection() {
         <p className="text-xs" style={{ color: 'var(--red)' }}>
           Bloqueadas · Actívalas en Ajustes › Safari › Notificaciones
         </p>
+      ) : status === 'granted-no-sub' ? (
+        <>
+          <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+            Tienes permiso pero la suscripción no está registrada. Toca el botón para re-activarlas.
+          </p>
+          <button
+            onClick={requestPermission}
+            disabled={subscribing}
+            className="py-2 rounded-xl text-sm font-medium transition-all active:scale-95"
+            style={{ background: 'var(--accent)', color: '#fff', opacity: subscribing ? 0.6 : 1 }}
+          >
+            {subscribing ? 'Activando...' : 'Re-activar notificaciones'}
+          </button>
+        </>
       ) : (
         <>
           <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
