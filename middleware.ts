@@ -37,8 +37,8 @@ export async function middleware(request: NextRequest) {
   }
 
   // Autenticado pero email no permitido → logout y a /login
-  const allowedEmail = process.env.ALLOWED_EMAIL
-  if (user && allowedEmail && user.email !== allowedEmail) {
+  const allowedEmails = (process.env.ALLOWED_EMAILS ?? '').split(',').map(e => e.trim()).filter(Boolean)
+  if (user && allowedEmails.length > 0 && !allowedEmails.includes(user.email ?? '')) {
     await supabase.auth.signOut()
     return NextResponse.redirect(new URL('/login?error=unauthorized', request.url))
   }
