@@ -29,7 +29,8 @@ export async function middleware(request: NextRequest) {
 
   const isLoginPage = request.nextUrl.pathname === '/login'
   const isCallbackRoute = request.nextUrl.pathname.startsWith('/auth/')
-  const isPublicRoute = isLoginPage || isCallbackRoute
+  const isApiRoute = request.nextUrl.pathname.startsWith('/api/')
+  const isPublicRoute = isLoginPage || isCallbackRoute || isApiRoute
 
   // No autenticado → redirigir a /login
   if (!user && !isPublicRoute) {
