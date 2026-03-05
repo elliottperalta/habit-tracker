@@ -63,3 +63,30 @@ export async function hasActivePushSubscription(): Promise<boolean> {
     return false
   }
 }
+
+/**
+ * Sincroniza la suscripción push activa del dispositivo con la base de datos.
+ * iOS puede generar un nuevo endpoint tras activar/desactivar notificaciones
+ * en Ajustes del sistema, dejando la suscripción guardada en Supabase obsoleta.
+ * Esta función garantiza que Supabase siempre tenga el endpoint más reciente.
+ *
+ * No lanza errores — falla silenciosamente si no hay suscripción activa.
+ */
+export async function syncPushSubscription(userId: string): Promise<void> {
+  try {
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) return
+    if (!('Notification' in window) || Notification.permission !== 'granted') return
+
+    const registration = await navigator.serviceWorker.ready
+    const subscription = await registration.pushManager.getSubscription()
+    if (!subscription) return
+
+    await fetch('/api/push/subscribe', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId, subscription: subscription.toJSON() }),
+    })
+  } catch {
+    // Silencioso — no interrumpir la carga de la app
+  }
+}

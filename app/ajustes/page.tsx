@@ -7,7 +7,7 @@ import { createBrowserClient } from '@supabase/ssr'
 import { useHabitsStore } from '@/store/habits-store'
 import { Habit } from '@/types'
 import { MAX_ACTIVE_HABITS } from '@/lib/constants'
-import { subscribeToPush, hasActivePushSubscription } from '@/lib/notifications'
+import { subscribeToPush, hasActivePushSubscription, syncPushSubscription } from '@/lib/notifications'
 
 export default function AjustesPage() {
   const router = useRouter()
@@ -271,11 +271,13 @@ function PushSection() {
       // Verificar si hay suscripción real (puede faltar en iOS después de reinstalar)
       hasActivePushSubscription().then((has) => {
         setStatus(has ? 'granted' : 'granted-no-sub')
+        // Sincronizar endpoint con Supabase (iOS puede haberlo cambiado tras toggle de permisos)
+        if (has && userId) syncPushSubscription(userId)
       })
     } else {
       setStatus('unknown')
     }
-  }, [])
+  }, [userId])
 
   async function requestPermission() {
     if (!userId) return

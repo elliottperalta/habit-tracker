@@ -3,6 +3,7 @@
 import { useEffect } from 'react'
 import { createBrowserClient } from '@supabase/ssr'
 import { useHabitsStore } from '@/store/habits-store'
+import { syncPushSubscription } from '@/lib/notifications'
 
 export default function AuthProvider({ children }: { children: React.ReactNode }) {
   const { setUserId, fetchHabits, fetchLogs } = useHabitsStore()
@@ -19,6 +20,8 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
         setUserId(user.id)
         fetchHabits()
         fetchLogs(60)
+        // Sincronizar suscripción push silenciosamente (cubre iOS tras toggle de permisos)
+        syncPushSubscription(user.id)
       }
     })
 
@@ -28,6 +31,7 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
         setUserId(session.user.id)
         fetchHabits()
         fetchLogs(60)
+        syncPushSubscription(session.user.id)
       } else {
         setUserId('')
       }
