@@ -27,6 +27,7 @@ export default function NuevoHabitoPage() {
   const [specificDays, setSpecificDays] = useState<number[]>([])
   const [timesPerWeek, setTimesPerWeek] = useState(3)
   const [notificationEnabled, setNotificationEnabled] = useState(false)
+  const [notificationTime, setNotificationTime] = useState('20:00')
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState('')
   const [showEmojiPicker, setShowEmojiPicker] = useState(false)
@@ -95,7 +96,7 @@ export default function NuevoHabitoPage() {
         weekly_goal: weeklyGoal,
         recurrence: finalRecurrence,
         notification_enabled: notificationEnabled,
-        notification_time: null,
+        notification_time: notificationEnabled ? notificationTime : null,
         notify_if_not_done: true,
         position: habits.length,
         archived: false,
@@ -368,12 +369,32 @@ export default function NuevoHabitoPage() {
             </button>
           </div>
 
+          {/* Selector de hora */}
+          {notificationEnabled && (
+            <div className="flex flex-col gap-2">
+              <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Hora de notificación</p>
+              <div className="flex gap-2 flex-wrap">
+                {[['07:00','7am'],['20:00','8pm'],['21:00','9pm'],['22:00','10pm']].map(([val, label]) => (
+                  <button key={val} type="button" onClick={() => setNotificationTime(val)}
+                    className="px-4 py-2 rounded-xl text-sm font-medium transition-all"
+                    style={{
+                      background: notificationTime === val ? 'var(--accent)' : 'var(--surface2)',
+                      border: `1px solid ${notificationTime === val ? 'var(--accent)' : 'var(--border)'}`,
+                      color: notificationTime === val ? '#fff' : 'var(--text)',
+                    }}>
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Descripción de la regla */}
           <div className="p-4 rounded-xl flex flex-col gap-1"
             style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
             <p className="text-xs font-semibold" style={{ color: 'var(--text-muted)' }}>¿Cuándo te avisamos?</p>
             <p className="text-sm" style={{ color: 'var(--text)' }}>
-              {type === 'check' && '📅 Cada día a las 20:00 si no lo has marcado'}
+              {type === 'check' && `📅 Cada día a las ${notificationTime} si no lo has marcado`}
               {type === 'minutes' && '📅 Miércoles si llevas 0 min · Viernes si vas por debajo del 50% de la meta'}
               {type === 'counter' && '📅 Viernes si te faltan sesiones para cerrar la semana'}
               {type === 'sleep' && '📅 Si duermes menos de 6h tres días seguidos'}

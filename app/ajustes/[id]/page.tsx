@@ -22,6 +22,7 @@ export default function EditarHabitoPage({ params }: { params: Promise<{ id: str
   const [icon, setIcon] = useState('📌')
   const [weeklyGoal, setWeeklyGoal] = useState(7)
   const [notificationEnabled, setNotificationEnabled] = useState(false)
+  const [notificationTime, setNotificationTime] = useState('20:00')
 
   useEffect(() => {
     if (habits.length === 0) fetchHabits()
@@ -34,6 +35,7 @@ export default function EditarHabitoPage({ params }: { params: Promise<{ id: str
       setIcon(habit.icon ?? '📌')
       setWeeklyGoal(habit.weekly_goal)
       setNotificationEnabled(habit.notification_enabled)
+      setNotificationTime(habit.notification_time ?? '20:00')
       setInitialized(true)
     }
   }, [habits, id, initialized])
@@ -66,7 +68,7 @@ export default function EditarHabitoPage({ params }: { params: Promise<{ id: str
       icon,
       weekly_goal: weeklyGoal,
       notification_enabled: notificationEnabled,
-      notification_time: null,
+      notification_time: notificationEnabled ? notificationTime : null,
       notify_if_not_done: true,
     })
     setSaving(false)
@@ -151,10 +153,28 @@ export default function EditarHabitoPage({ params }: { params: Promise<{ id: str
                 style={{ width: 20, height: 20, background: '#fff', left: notificationEnabled ? 24 : 3, transition: 'left 0.3s' }} />
             </button>
           </div>
+          {notificationEnabled && (
+            <div className="flex flex-col gap-2">
+              <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Hora de notificación</p>
+              <div className="flex gap-2 flex-wrap">
+                {[['07:00','7am'],['20:00','8pm'],['21:00','9pm'],['22:00','10pm']].map(([val, label]) => (
+                  <button key={val} type="button" onClick={() => setNotificationTime(val)}
+                    className="px-4 py-2 rounded-xl text-sm font-medium transition-all"
+                    style={{
+                      background: notificationTime === val ? 'var(--accent)' : 'var(--surface2)',
+                      border: `1px solid ${notificationTime === val ? 'var(--accent)' : 'var(--border)'}`,
+                      color: notificationTime === val ? '#fff' : 'var(--text)',
+                    }}>
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
           <div className="p-4 rounded-xl" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
             <p className="text-xs font-semibold mb-1" style={{ color: 'var(--text-muted)' }}>¿Cuándo te avisamos?</p>
             <p className="text-sm" style={{ color: 'var(--text)' }}>
-              {habit.type === 'check' && '📅 Cada día a las 20:00 si no lo has marcado'}
+              {habit.type === 'check' && `📅 Cada día a las ${notificationTime} si no lo has marcado`}
               {habit.type === 'minutes' && '📅 Miércoles si llevas 0 min · Viernes si vas por debajo del 50% de la meta'}
               {habit.type === 'counter' && '📅 Viernes si te faltan sesiones para cerrar la semana'}
               {habit.type === 'sleep' && '📅 Si duermes menos de 6h tres días seguidos'}

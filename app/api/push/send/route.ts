@@ -151,11 +151,22 @@ async function runNotifications(): Promise<NextResponse> {
     // Traer todos los hábitos activos con notificación habilitada
     const { data: habits } = await supabaseAdmin
       .from('habits')
-      .select('id, name, icon, type, weekly_goal, user_id, notify_if_not_done')
+      .select('id, name, icon, type, weekly_goal, user_id, notify_if_not_done, notification_time')
       .eq('notification_enabled', true)
       .eq('archived', false)
 
     if (!habits || habits.length === 0) return NextResponse.json({ sent: 0, debug: 'no habits' })
+
+    // Hora actual en Panamá (HH) para filtrar por notification_time
+    const currentHour = now.getHours() // 0-23 en hora panameña
+
+    // Solo hábitos cuya notification_time coincide con la hora actual del llamado
+    // Si un hábito no tiene notification_time, se usa la lógica inteligente original (sin filtro de hora)
+    const habitsToProcess = habits.filter((h) => {
+      if (!h.notification_time) return true // sin hora configurada → siempre elegible
+      const [hh] = (h.notification_time as string).split(':').map(Number)
+      return hh === currentHour
+    })
 
     // Caché de suscripciones por user_id para no repetir consultas
     const subCache: Record<string, webpush.PushSubscription | null> = {}
@@ -187,7 +198,7 @@ async function runNotifications(): Promise<NextResponse> {
     let sent = 0
     const log: string[] = []
 
-    for (const habit of habits) {
+    for (const habit of habitsToProcess) {
       const icon = habit.icon ?? ''
       let payload: NotifPayload | null = null
 
