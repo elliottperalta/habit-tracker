@@ -176,7 +176,7 @@ export const useHabitsStore = create<HabitsState>()(
       },
 
       archiveHabit: async (id) => {
-        await supabase.from('habits').update({ archived: true }).eq('id', id)
+        await supabase.from('habits').delete().eq('id', id)
         set((s) => ({ habits: s.habits.filter((h) => h.id !== id) }))
       },
 

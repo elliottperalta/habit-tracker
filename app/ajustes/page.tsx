@@ -242,7 +242,7 @@ function HabitRow({
                 opacity: archiving ? 0.5 : 1,
               }}
             >
-              {archiving ? '...' : '🗄 Archivar'}
+              {archiving ? '...' : '� Eliminar'}
             </button>
           </div>
         </div>
