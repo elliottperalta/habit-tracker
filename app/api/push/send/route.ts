@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import webpush from 'web-push'
+import { timingSafeEqual } from 'crypto'
 import { supabaseAdmin } from '@/lib/supabase/server'
 
 /**
@@ -127,8 +128,14 @@ function buildSleepAwarenessPayload(icon: string, name: string): NotifPayload {
 // ─── Handler principal ────────────────────────────────────────────────────────
 
 function checkAuth(req: NextRequest): boolean {
-  const authHeader = req.headers.get('Authorization')
-  return authHeader === `Bearer ${process.env.CRON_SECRET}`
+  const authHeader = req.headers.get('Authorization') ?? ''
+  const expected = `Bearer ${process.env.CRON_SECRET ?? ''}`
+  if (authHeader.length === 0 || authHeader.length !== expected.length) return false
+  try {
+    return timingSafeEqual(Buffer.from(authHeader), Buffer.from(expected))
+  } catch {
+    return false
+  }
 }
 
 async function runNotifications(): Promise<NextResponse> {

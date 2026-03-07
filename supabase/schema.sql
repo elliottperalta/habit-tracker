@@ -7,10 +7,10 @@
 CREATE TABLE IF NOT EXISTS habits (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id uuid REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
-  name text NOT NULL,
-  icon text,
+  name text NOT NULL CHECK (char_length(name) >= 1 AND char_length(name) <= 100),
+  icon text CHECK (icon IS NULL OR char_length(icon) <= 20),
   type text NOT NULL CHECK (type IN ('check', 'minutes', 'counter', 'sleep')),
-  weekly_goal int NOT NULL DEFAULT 7,
+  weekly_goal int NOT NULL DEFAULT 7 CHECK (weekly_goal >= 1 AND weekly_goal <= 365),
   recurrence jsonb NOT NULL DEFAULT '{"type": "daily"}',
   notification_enabled boolean NOT NULL DEFAULT false,
   notification_time time,
@@ -83,6 +83,9 @@ CREATE TABLE IF NOT EXISTS notification_sent_log (
 );
 CREATE UNIQUE INDEX IF NOT EXISTS idx_notif_log_dedup
   ON notification_sent_log(habit_id, sent_date, sent_hour);
+
+-- Solo el service role puede acceder (ningún cliente anon/autenticado puede leer ni escribir)
+ALTER TABLE notification_sent_log ENABLE ROW LEVEL SECURITY;
 
 -- ====================================================
 -- Indexes para performance
