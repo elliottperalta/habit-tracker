@@ -168,6 +168,15 @@ async function runNotifications(): Promise<NextResponse> {
       return hh === currentHour
     })
 
+    /** Devuelve true si se pudo reservar el slot (primera vez esta hora). False = ya enviado. */
+    async function claimSendSlot(habitId: string): Promise<boolean> {
+      const { error } = await supabaseAdmin
+        .from('notification_sent_log')
+        .insert({ habit_id: habitId, sent_date: today, sent_hour: currentHour })
+      // error code 23505 = unique_violation → ya enviado esta hora
+      return !error
+    }
+
     // Caché de suscripciones por user_id para no repetir consultas
     const subCache: Record<string, webpush.PushSubscription | null> = {}
 
@@ -248,6 +257,11 @@ async function runNotifications(): Promise<NextResponse> {
       }
 
       if (payload) {
+        const canSend = await claimSendSlot(habit.id)
+        if (!canSend) {
+          log.push(`[SKIP] ${habit.name} → ya enviado esta hora`)
+          continue
+        }
         const ok = await sendPush(habit.user_id, payload)
         if (ok) {
           sent++

@@ -73,6 +73,17 @@ CREATE POLICY "Users can manage own push subscriptions"
   USING (auth.uid() = user_id)
   WITH CHECK (auth.uid() = user_id);
 
+-- Log de notificaciones enviadas (para deduplicación: evitar doble envío si el cron corre 2 veces)
+CREATE TABLE IF NOT EXISTS notification_sent_log (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  habit_id uuid REFERENCES habits(id) ON DELETE CASCADE NOT NULL,
+  sent_date date NOT NULL,
+  sent_hour smallint NOT NULL, -- 0-23, hora Panamá
+  sent_at timestamptz DEFAULT now()
+);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_notif_log_dedup
+  ON notification_sent_log(habit_id, sent_date, sent_hour);
+
 -- ====================================================
 -- Indexes para performance
 -- ====================================================
